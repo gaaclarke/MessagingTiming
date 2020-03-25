@@ -20,4 +20,6 @@ void setupPigeon(PigeonOptions opts) {
   opts.objcHeaderOut = 'ios/Classes/pigeon.h';
   opts.objcSourceOut = 'ios/Classes/pigeon.m';
   opts.objcOptions.prefix = 'PGN';
+  opts.javaOut = 'android/src/main/java/com/example/MessagingTiming/Pigeon.java';
+  opts.javaOptions.package = 'com.example.MessagingTiming';
 }

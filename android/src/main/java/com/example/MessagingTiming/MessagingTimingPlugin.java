@@ -2,38 +2,49 @@ package com.example.MessagingTiming;
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.plugin.common.BasicMessageChannel;
+import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
+import io.flutter.plugin.common.StandardMessageCodec;
 
 /** MessagingTimingPlugin */
 public class MessagingTimingPlugin implements FlutterPlugin, MethodCallHandler {
-  /// The MethodChannel that will the communication between Flutter and native Android
+  /// The MethodChannel that will the communication between Flutter and native
+  /// Android
   ///
-  /// This local reference serves to register the plugin with the Flutter Engine and unregister it
-  /// when the Flutter Engine is detached from the Activity
+  /// This local reference serves to register the plugin with the Flutter Engine
+  /// and unregister it when the Flutter Engine is detached from the Activity
   private MethodChannel channel;
+  private BasicMessageChannel<Object> basicMessageChannel;
 
   @Override
-  public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-    channel = new MethodChannel(flutterPluginBinding.getFlutterEngine().getDartExecutor(), "MessagingTiming");
-    channel.setMethodCallHandler(this);
+  public void
+  onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
+    setup(flutterPluginBinding.getFlutterEngine().getDartExecutor());
   }
 
-  // This static function is optional and equivalent to onAttachedToEngine. It supports the old
-  // pre-Flutter-1.12 Android projects. You are encouraged to continue supporting
-  // plugin registration via this function while apps migrate to use the new Android APIs
-  // post-flutter-1.12 via https://flutter.dev/go/android-project-migration.
-  //
-  // It is encouraged to share logic between onAttachedToEngine and registerWith to keep
-  // them functionally equivalent. Only one of onAttachedToEngine or registerWith will be called
-  // depending on the user's project. onAttachedToEngine or registerWith must both be defined
-  // in the same class.
   public static void registerWith(Registrar registrar) {
-    final MethodChannel channel = new MethodChannel(registrar.messenger(), "MessagingTiming");
-    channel.setMethodCallHandler(new MessagingTimingPlugin());
+    MessagingTimingPlugin plugin = new MessagingTimingPlugin();
+    plugin.setup(registrar.messenger());
+  }
+
+  private void setup(BinaryMessenger binaryMessenger) {
+    channel = new MethodChannel(binaryMessenger, "MessagingTiming");
+    channel.setMethodCallHandler(this);
+    basicMessageChannel = new BasicMessageChannel<Object>(
+        binaryMessenger, "BasicMessageChannel", new StandardMessageCodec());
+    basicMessageChannel.setMessageHandler(
+        new BasicMessageChannel.MessageHandler<Object>() {
+          public void onMessage(Object message,
+                                BasicMessageChannel.Reply<Object> reply) {
+            reply.reply("Android " + android.os.Build.VERSION.RELEASE);
+          }
+        });
+    Pigeon.Api.setup(binaryMessenger, new MyApi());
   }
 
   @Override
@@ -48,5 +59,13 @@ public class MessagingTimingPlugin implements FlutterPlugin, MethodCallHandler {
   @Override
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
     channel.setMethodCallHandler(null);
+  }
+
+  private class MyApi implements Pigeon.Api {
+    public Pigeon.StringMessage getPlatformVersion(Pigeon.VoidMessage arg) {
+      Pigeon.StringMessage result = new Pigeon.StringMessage();
+      result.setMessage("Android " + android.os.Build.VERSION.RELEASE);
+      return result;
+    }
   }
 }
