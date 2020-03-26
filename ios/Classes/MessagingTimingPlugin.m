@@ -20,6 +20,9 @@
 
 @implementation MessagingTimingPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
+//  typedef int32_t (*native_add_t)(int32_t, int32_t);
+//  static volatile native_add_t native_add_var = &native_add;
+
   FlutterMethodChannel *channel =
       [FlutterMethodChannel methodChannelWithName:@"MessagingTiming"
                                   binaryMessenger:[registrar messenger]];

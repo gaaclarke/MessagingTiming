@@ -72,6 +72,15 @@ Future<double> _calcDart() async {
   });
 }
 
+Future<double> _calcFfi() async {
+  final MessagingTiming messagingTiming = MessagingTiming();
+  return await _measureVoidString(() {
+    Completer<String> completer = Completer<String>();
+    completer.complete(messagingTiming.getFfiPlatformVersion());
+    return completer.future;
+  });
+}
+
 class _MyAppState extends State<MyApp> {
   Map<String, double> _results = {};
 
@@ -97,6 +106,8 @@ class _MyAppState extends State<MyApp> {
       ['basic message channel (2nd run)', _calcBasicMessageChannel],
       ['pigeon (1st run)', _calcPigeon],
       ['pigeon (2nd run)', _calcPigeon],
+      ['ffi (1st run)', _calcFfi],
+      ['ffi (2nd run)', _calcFfi],
       ['just Dart', _calcDart],
     ], (int index, List entry) => _makeTest('$index', entry[0], entry[1]))
         .toList();
