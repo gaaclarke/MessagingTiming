@@ -10,3 +10,11 @@ char* GetPlatformVersion(void) {
   });
   return result;
 }
+
+char* GetPlatformVersionUi(void) {
+  static char* s_cache;
+  if (!s_cache) {
+    s_cache = GetPlatformVersion();
+  }
+  return strdup(s_cache);
+}

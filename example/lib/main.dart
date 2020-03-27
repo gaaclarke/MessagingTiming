@@ -82,6 +82,15 @@ Future<double> _calcFfi() async {
   });
 }
 
+Future<double> _calcFfiUi() async {
+  final MessagingTiming messagingTiming = MessagingTiming();
+  return await _measureVoidString(() {
+    Completer<String> completer = Completer<String>();
+    completer.complete(messagingTiming.getFfiPlatformVersionUi());
+    return completer.future;
+  });
+}
+
 void _ffiRunner(SendPort sendPort) async {
   final MessagingTiming messagingTiming = MessagingTiming();
   var ourReceivePort = ReceivePort();
@@ -140,10 +149,9 @@ class _MyAppState extends State<MyApp> {
       ['basic message channel (2nd run)', _calcBasicMessageChannel],
       ['pigeon (1st run)', _calcPigeon],
       ['pigeon (2nd run)', _calcPigeon],
-      ['ffi (1st run)', _calcFfi],
-      ['ffi (2nd run)', _calcFfi],
-      ['ffi non-blocking (1st run)', _calcFfiNonBlocking],
-      ['ffi non-blocking (2nd run)', _calcFfiNonBlocking],
+      ['ffi', _calcFfi],
+      ['ffi non-blocking', _calcFfiNonBlocking],
+      ['ffi ui thread', _calcFfiUi],
       ['just Dart', _calcDart],
     ], (int index, List entry) => _makeTest('$index', entry[0], entry[1]))
         .toList();

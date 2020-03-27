@@ -23,6 +23,12 @@ final GetPlatformVersionDartFunc _nativeGetPlatformVersion =
     .lookup<NativeFunction<GetPlatformVersionNativeFunc>>("GetPlatformVersion")
     .asFunction<GetPlatformVersionDartFunc>();
 
+final GetPlatformVersionDartFunc _nativeGetPlatformVersionUi =
+  _nativeAddLib
+    .lookup<NativeFunction<GetPlatformVersionNativeFunc>>("GetPlatformVersionUi")
+    .asFunction<GetPlatformVersionDartFunc>();
+
+
 class MessagingTiming {
   final MethodChannel _methodChannel = const MethodChannel('MessagingTiming');
 
@@ -48,5 +54,9 @@ class MessagingTiming {
 
   String getFfiPlatformVersion() {
     return Utf8.fromUtf8(_nativeGetPlatformVersion());
+  }
+
+  String getFfiPlatformVersionUi() {
+    return Utf8.fromUtf8(_nativeGetPlatformVersionUi());
   }
 }
