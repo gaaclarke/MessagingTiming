@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:isolate';
 
+import 'package:flutter/material.dart';
 import 'package:MessagingTiming/MessagingTiming.dart';
 import 'package:MessagingTiming/pigeon.dart';
 
@@ -81,6 +82,39 @@ Future<double> _calcFfi() async {
   });
 }
 
+void _ffiRunner(SendPort sendPort) async {
+  final MessagingTiming messagingTiming = MessagingTiming();
+  var ourReceivePort = ReceivePort();
+  sendPort.send(ourReceivePort.sendPort);
+  await for (dynamic _ in ourReceivePort) {
+    sendPort.send(messagingTiming.getFfiPlatformVersion());
+  }
+}
+
+Future<double> _calcFfiNonBlocking() async {
+  final ReceivePort receivePort = ReceivePort();
+  final Completer<SendPort> sendPortCompleter = Completer<SendPort>();
+  final Isolate isolate = await Isolate.spawn(_ffiRunner, receivePort.sendPort);
+  Completer<String> completer;
+  bool sentPort = false;
+  receivePort.listen((data) {
+    if (!sentPort) {
+      sendPortCompleter.complete(data);
+      sentPort = true;
+    } else {
+      completer.complete(data);
+    }
+  });
+  final SendPort sendPort = await sendPortCompleter.future;
+  final double result = await _measureVoidString(() {
+    completer = Completer<String>();
+    sendPort.send(null);
+    return completer.future;
+  });
+  isolate.kill();
+  return result;
+}
+
 class _MyAppState extends State<MyApp> {
   Map<String, double> _results = {};
 
@@ -108,6 +142,8 @@ class _MyAppState extends State<MyApp> {
       ['pigeon (2nd run)', _calcPigeon],
       ['ffi (1st run)', _calcFfi],
       ['ffi (2nd run)', _calcFfi],
+      ['ffi non-blocking (1st run)', _calcFfiNonBlocking],
+      ['ffi non-blocking (2nd run)', _calcFfiNonBlocking],
       ['just Dart', _calcDart],
     ], (int index, List entry) => _makeTest('$index', entry[0], entry[1]))
         .toList();
