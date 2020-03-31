@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
@@ -74,6 +75,9 @@ Future<double> _calcDart() async {
 }
 
 Future<double> _calcFfi() async {
+  if (Platform.isAndroid) {
+    return -1;
+  }
   final MessagingTiming messagingTiming = MessagingTiming();
   return await _measureVoidString(() {
     Completer<String> completer = Completer<String>();
@@ -83,6 +87,9 @@ Future<double> _calcFfi() async {
 }
 
 Future<double> _calcFfiUi() async {
+  if (Platform.isAndroid) {
+    return -1;
+  }
   final MessagingTiming messagingTiming = MessagingTiming();
   return await _measureVoidString(() {
     Completer<String> completer = Completer<String>();
@@ -101,6 +108,9 @@ void _ffiRunner(SendPort sendPort) async {
 }
 
 Future<double> _calcFfiNonBlocking() async {
+  if (Platform.isAndroid) {
+    return -1;
+  }
   final ReceivePort receivePort = ReceivePort();
   final Completer<SendPort> sendPortCompleter = Completer<SendPort>();
   final Isolate isolate = await Isolate.spawn(_ffiRunner, receivePort.sendPort);

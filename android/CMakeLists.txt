@@ -6,4 +6,4 @@ add_library( native_add
              SHARED
 
              # Provides a relative path to your source file(s).
-             ../ios/Classes/native_add.cpp )
+             ffi/ffi.c )
