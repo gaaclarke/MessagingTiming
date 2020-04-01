@@ -1,8 +1,11 @@
 package com.example.MessagingTiming;
 
+import android.util.Log;
 import androidx.annotation.NonNull;
+import java.nio.ByteBuffer;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.BasicMessageChannel;
+import io.flutter.plugin.common.BinaryCodec;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -13,6 +16,7 @@ import io.flutter.plugin.common.StandardMessageCodec;
 
 /** MessagingTimingPlugin */
 public class MessagingTimingPlugin implements FlutterPlugin, MethodCallHandler {
+  private static final String TAG = "MessagingTimingPlugin";
   /// The MethodChannel that will the communication between Flutter and native
   /// Android
   ///
@@ -20,6 +24,7 @@ public class MessagingTimingPlugin implements FlutterPlugin, MethodCallHandler {
   /// and unregister it when the Flutter Engine is detached from the Activity
   private MethodChannel channel;
   private BasicMessageChannel<Object> basicMessageChannel;
+  private BasicMessageChannel<ByteBuffer> basicMessageChannelBinary;
 
   @Override
   public void
@@ -35,16 +40,39 @@ public class MessagingTimingPlugin implements FlutterPlugin, MethodCallHandler {
   private void setup(BinaryMessenger binaryMessenger) {
     channel = new MethodChannel(binaryMessenger, "MessagingTiming");
     channel.setMethodCallHandler(this);
-    basicMessageChannel = new BasicMessageChannel<Object>(
-        binaryMessenger, "BasicMessageChannel", new StandardMessageCodec());
-    basicMessageChannel.setMessageHandler(
-        new BasicMessageChannel.MessageHandler<Object>() {
-          public void onMessage(Object message,
-                                BasicMessageChannel.Reply<Object> reply) {
-            reply.reply("Android " + android.os.Build.VERSION.RELEASE);
+    basicMessageChannelBinary = new BasicMessageChannel<ByteBuffer>(
+        binaryMessenger, "BasicMessageChannelBinary", BinaryCodec.INSTANCE);
+    basicMessageChannelBinary.setMessageHandler(
+      new BasicMessageChannel.MessageHandler<ByteBuffer>() {
+        public void onMessage(ByteBuffer message,
+                              BasicMessageChannel.Reply<ByteBuffer> reply) {
+          // TODO: Check message.
+          try {
+            ByteBuffer buffer =
+                ByteBuffer.wrap(android.os.Build.VERSION.RELEASE.getBytes("UTF-8"));
+            reply.reply(buffer);
+          } catch (Exception ex) {
+            reply.reply(null);
           }
-        });
+        }
+      });
+    basicMessageChannel = new BasicMessageChannel<Object>(
+      binaryMessenger, "BasicMessageChannel", new StandardMessageCodec());
+    basicMessageChannel.setMessageHandler(
+      new BasicMessageChannel.MessageHandler<Object>() {
+        public void onMessage(Object message,
+                              BasicMessageChannel.Reply<Object> reply) {
+          reply.reply("Android " + android.os.Build.VERSION.RELEASE);
+        }
+      });
     Pigeon.Api.setup(binaryMessenger, new MyApi());
+    try {
+      Log.v(TAG, "load library");
+      System.loadLibrary("libnative_add.so");
+      setupJni();
+    } catch (Exception ex) {
+      Log.v(TAG, ex.toString());
+    }
   }
 
   @Override
@@ -68,4 +96,6 @@ public class MessagingTimingPlugin implements FlutterPlugin, MethodCallHandler {
       return result;
     }
   }
+
+  private native void setupJni();
 }

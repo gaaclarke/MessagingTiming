@@ -3,8 +3,10 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:ffi/ffi.dart';
@@ -41,10 +43,24 @@ class MessagingTiming {
   final BasicMessageChannel _basicMessageChannel =
       BasicMessageChannel('BasicMessageChannel', StandardMessageCodec());
 
+  final BasicMessageChannel _basicMessageChannelBinary =
+      BasicMessageChannel('BasicMessageChannelBinary', BinaryCodec());
+
   Future<String> get basicMessageChannelPlatformVersion async {
     final String version =
         await _basicMessageChannel.send('getPlatformVersion');
     return version;
+  }
+
+  static final ByteBuffer _getPlatformVersionBuffer =
+    Uint8List.fromList(utf8.encode("getPlatformVersion")).buffer;
+  static final ByteData _getPlatformVersionByteData =
+    ByteData.view(_getPlatformVersionBuffer);
+
+  Future<String> get basicMessageChannelBinaryPlatformVersion async {
+    final ByteData version =
+        await _basicMessageChannelBinary.send(_getPlatformVersionByteData);
+    return utf8.decode(version.buffer.asUint8List());
   }
 
   Future<String> getPigeonPlatformVersion(Api api) async {

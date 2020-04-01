@@ -59,6 +59,13 @@ Future<double> _calcBasicMessageChannel() async {
       () => messagingTiming.basicMessageChannelPlatformVersion);
 }
 
+Future<double> _calcBasicMessageChannelBinary() async {
+  final MessagingTiming messagingTiming = MessagingTiming();
+  return await _measureVoidString(
+      () => messagingTiming.basicMessageChannelBinaryPlatformVersion);
+}
+
+
 Future<double> _calcPigeon() async {
   final MessagingTiming messagingTiming = MessagingTiming();
   final Api api = Api();
@@ -87,9 +94,6 @@ Future<double> _calcFfi() async {
 }
 
 Future<double> _calcFfiUi() async {
-  if (Platform.isAndroid) {
-    return -1;
-  }
   final MessagingTiming messagingTiming = MessagingTiming();
   return await _measureVoidString(() {
     Completer<String> completer = Completer<String>();
@@ -157,6 +161,8 @@ class _MyAppState extends State<MyApp> {
       ['simple method channel (2nd run)', _calcSimpleMethodChannel],
       ['basic message channel (1st run)', _calcBasicMessageChannel],
       ['basic message channel (2nd run)', _calcBasicMessageChannel],
+      ['basic message channel binary (1st run)', _calcBasicMessageChannelBinary],
+      ['basic message channel binary (2nd run)', _calcBasicMessageChannelBinary],
       ['pigeon (1st run)', _calcPigeon],
       ['pigeon (2nd run)', _calcPigeon],
       ['ffi', _calcFfi],
