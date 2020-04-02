@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
@@ -109,9 +108,6 @@ void _ffiRunner(SendPort sendPort) async {
 }
 
 Future<double> _calcFfiNonBlocking() async {
-  if (Platform.isAndroid) {
-    return -1;
-  }
   final ReceivePort receivePort = ReceivePort();
   final Completer<SendPort> sendPortCompleter = Completer<SendPort>();
   final Isolate isolate = await Isolate.spawn(_ffiRunner, receivePort.sendPort);
