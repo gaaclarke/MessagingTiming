@@ -82,9 +82,6 @@ Future<double> _calcDart() async {
 }
 
 Future<double> _calcFfi() async {
-  if (Platform.isAndroid) {
-    return -1;
-  }
   final MessagingTiming messagingTiming = MessagingTiming();
   return await _measureVoidString(() {
     Completer<String> completer = Completer<String>();

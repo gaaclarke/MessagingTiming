@@ -1,8 +1,11 @@
 package com.example.MessagingTiming;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import java.nio.ByteBuffer;
+import java.util.concurrent.CompletableFuture;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.BasicMessageChannel;
 import io.flutter.plugin.common.BinaryCodec;
@@ -49,7 +52,7 @@ public class MessagingTimingPlugin implements FlutterPlugin, MethodCallHandler {
           // TODO: Check message.
           try {
             ByteBuffer buffer =
-                ByteBuffer.wrap(android.os.Build.VERSION.RELEASE.getBytes("UTF-8"));
+                ByteBuffer.wrap(getPlatformVersion().getBytes("UTF-8"));
             reply.reply(buffer);
           } catch (Exception ex) {
             reply.reply(null);
@@ -62,23 +65,22 @@ public class MessagingTimingPlugin implements FlutterPlugin, MethodCallHandler {
       new BasicMessageChannel.MessageHandler<Object>() {
         public void onMessage(Object message,
                               BasicMessageChannel.Reply<Object> reply) {
-          reply.reply("Android " + android.os.Build.VERSION.RELEASE);
+          reply.reply(getPlatformVersion());
         }
       });
     Pigeon.Api.setup(binaryMessenger, new MyApi());
     try {
-      Log.v(TAG, "load library");
-      System.loadLibrary("libnative_add.so");
-      setupJni();
+      Log.i(TAG, "load library");
+      System.loadLibrary("native_add");
     } catch (Exception ex) {
-      Log.v(TAG, ex.toString());
+      Log.i(TAG, ex.toString());
     }
   }
 
   @Override
   public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
     if (call.method.equals("getPlatformVersion")) {
-      result.success("Android " + android.os.Build.VERSION.RELEASE);
+      result.success(getPlatformVersion());
     } else {
       result.notImplemented();
     }
@@ -92,10 +94,29 @@ public class MessagingTimingPlugin implements FlutterPlugin, MethodCallHandler {
   private class MyApi implements Pigeon.Api {
     public Pigeon.StringMessage getPlatformVersion(Pigeon.VoidMessage arg) {
       Pigeon.StringMessage result = new Pigeon.StringMessage();
-      result.setMessage("Android " + android.os.Build.VERSION.RELEASE);
+      result.setMessage(MessagingTimingPlugin.getPlatformVersion());
       return result;
     }
   }
 
-  private native void setupJni();
+  public static String getPlatformVersion() {
+    return "Android " + android.os.Build.VERSION.RELEASE;
+  }
+
+  public static String getPlatformVersionMainThread() {
+    CompletableFuture<String> future = new CompletableFuture<String>();
+    new Handler(Looper.getMainLooper()).post(new Runnable() {
+      public void run() {
+        future.complete(getPlatformVersion());
+      }
+    });
+    String result = null;
+    try {
+      result = future.get();
+    } catch (Exception ex) {
+      Log.i(TAG, ex.toString());
+    } finally {
+      return result;
+    }
+  }
 }
