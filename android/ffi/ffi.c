@@ -6,7 +6,6 @@
 
 #define APPNAME "MessagingTimingPlugin"
 
-static JNIEnv *s_env;
 static JavaVM *s_vm;
 static jclass s_MessagingTimingPlugin;
 
@@ -28,17 +27,21 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
 }
 
 char *GetPlatformVersion(void) {
-  JNIEnv *env;
+  JNIEnv *env = NULL;
   jint err = (*s_vm)->AttachCurrentThread(s_vm, &env, NULL);
   assert(err == JNI_OK);
-  jmethodID method = (*env)->GetStaticMethodID(env, s_MessagingTimingPlugin,
-                                               "getPlatformVersionMainThread",
-                                               "()Ljava/lang/String;");
-  assert(method);
+  static jmethodID s_method = NULL;
+  if (!s_method) {
+    s_method = (*env)->GetStaticMethodID(env, s_MessagingTimingPlugin,
+                                         "getPlatformVersionMainThread",
+                                         "()Ljava/lang/String;");
+    assert((*env)->ExceptionCheck(env) == JNI_FALSE);
+  }
+  assert(s_method);
   jstring obj =
-      (*env)->CallStaticObjectMethod(env, s_MessagingTimingPlugin, method);
+      (*env)->CallStaticObjectMethod(env, s_MessagingTimingPlugin, s_method);
+  assert((*env)->ExceptionCheck(env) == JNI_FALSE);
   assert(obj);
-  (*env)->DeleteLocalRef(env, method);
   char *jresult = (*env)->GetStringUTFChars(env, obj, /*isCopy=*/NULL);
   assert(jresult);
   char *result = strdup(jresult);
@@ -50,19 +53,22 @@ char *GetPlatformVersion(void) {
 }
 
 char *GetPlatformVersionUi(void) {
+  static JNIEnv *s_env = NULL;
+  static jmethodID s_method;
   if (!s_env) {
     assert(s_vm);
     jint err = (*s_vm)->AttachCurrentThread(s_vm, &s_env, NULL);
     assert(err == JNI_OK);
+    s_method = (*s_env)->GetStaticMethodID(s_env, s_MessagingTimingPlugin,
+                                           "getPlatformVersion",
+                                           "()Ljava/lang/String;");
+    assert((*s_env)->ExceptionCheck(s_env) == JNI_FALSE);
   }
-  jmethodID method =
-      (*s_env)->GetStaticMethodID(s_env, s_MessagingTimingPlugin,
-                                  "getPlatformVersion", "()Ljava/lang/String;");
-  assert(method);
-  jstring obj =
-      (*s_env)->CallStaticObjectMethod(s_env, s_MessagingTimingPlugin, method);
+  assert(s_method);
+  jstring obj = (*s_env)->CallStaticObjectMethod(s_env, s_MessagingTimingPlugin,
+                                                 s_method);
+  assert((*s_env)->ExceptionCheck(s_env) == JNI_FALSE);
   assert(obj);
-  (*s_env)->DeleteLocalRef(s_env, method);
   char *jresult = (*s_env)->GetStringUTFChars(s_env, obj, /*isCopy=*/NULL);
   assert(jresult);
   char *result = strdup(jresult);
