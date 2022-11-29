@@ -69,10 +69,10 @@ class MessagingTiming {
   }
 
   String getFfiPlatformVersion() {
-    return Utf8.fromUtf8(_nativeGetPlatformVersion());
+    return _nativeGetPlatformVersion().toDartString();
   }
 
   String getFfiPlatformVersionUi() {
-    return Utf8.fromUtf8(_nativeGetPlatformVersionUi());
+    return _nativeGetPlatformVersionUi().toDartString();
   }
 }
